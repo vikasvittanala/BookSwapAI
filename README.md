@@ -3,7 +3,7 @@
 
 ## Features
 
-- Book shelf scanner
+- Bookshelf scanner
 - Book metadata enrichment
 - User-matching using preferences
 - Basic messaging system

@@ -1,0 +1,64 @@
+# dependencies
+node_modules/
+
+# next.js
+.next/
+out/
+
+# production
+build/
+dist/
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# vercel
+.vercel/
+
+# supabase
+.supabase/
+
+# database
+*.sqlite
+*.db
+
+# uploads
+uploads/
+public/uploads/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDEs/editors
+.vscode/
+.idea/
+
+# coverage
+coverage/
+
+# typescript
+*.tsbuildinfo
+
+# temporary files
+tmp/
+temp/
+
+# python (if using AI scripts)
+__pycache__/
+*.pyc
+venv/
+.env/
+
+# misc
+*.log
