@@ -1,5 +1,5 @@
 # BookSwapAI
-**BookSwap AI** is a platform for readers to find and swap physical books with fellow users using AI.
+**BookSwap AI** is a web app for readers to find and swap physical books with fellow users using AI.
 
 ## Features
 
