@@ -4,6 +4,8 @@
 ## Features
 
 - Bookshelf scanner
+Users can upload images of their bookshelf, which are processed using GPT-4o Vision to quickly identify what books they currently own.
+
 - Book metadata enrichment
 - User-matching using preferences
 - Basic messaging system
