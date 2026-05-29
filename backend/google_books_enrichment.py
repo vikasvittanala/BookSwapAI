@@ -36,10 +36,10 @@ def enrich_with_google_books(title: str, author: str) -> dict | None: # Function
         return None
     
     searched_in_english = not is_non_english(title) # Whether the input title is English 
-    
+
     for item in data["items"]: # Iterate over each possible match to evaluate the closeness of the match
-        info = data["items"][0]["volumeInfo"]
-        sale_info = data["items"][0].get("saleInfo", {})
+        info = item["volumeInfo"]
+        sale_info = item.get("saleInfo", {})
         returned_title = info.get("title", "")
 
         if searched_in_english and is_non_english(returned_title): # Skip non-English matches if user input was English
@@ -47,7 +47,7 @@ def enrich_with_google_books(title: str, author: str) -> dict | None: # Function
 
         if title_similarity(title, returned_title) < 0.3: # Reject if returned title is not a close enough match, arbitrary value 0.3 used
             return None
-        
+
         return { # All metadata to grab from the first iteration that passes all checks
             "title": info.get("title", title),
             "author": ", ".join(info.get("authors", [author])),

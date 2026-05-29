@@ -4,7 +4,10 @@
 ## Features
 
 - Bookshelf scanner
+
 - Book metadata enrichment
+Identified books are validated and enriched using the Google Books API. This filters out low-confidence matches while supplementing with metadata such as description, page count, thumbnails, and price.
+
 - User-matching using preferences
 - Basic messaging system
 
