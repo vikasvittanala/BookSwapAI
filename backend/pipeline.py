@@ -37,7 +37,7 @@ if __name__ == "__main__": # If this file is run manually
     )
     print(f"Test user created: {user['id']}")
 
-    results = run_pipeline("Example bookshelf image.jpeg", user["id"]) # Run the pipeline on a test image
+    results = run_pipeline("Example bookshelf image.jpg", user["id"]) # Run the pipeline on a test image
     print(f"\nFinal verified books:")
     for book in results:
         print(f"  - {book['title']} by {book['author']} | {book['genre']} | ${book.get('retail_price', 'N/A')}")
