@@ -43,29 +43,87 @@ def create_user(username: str, email: str, location: str = None) -> dict: # Crea
     result = supabase.table("users").insert(data).execute()
     return result.data[0]
 
-if __name__ == "__main__": # Only runs following block if file is run manually, test with a dummy user and books
-    print("Creating test user...\n") # Dummy user
-    user = create_user("testuser", f"test_{__import__('uuid').uuid4().hex[:6]}@test.com", "Singapore")
-    print(f"Created user: {user['id']}")
+def create_swap_request(requester_id: str, receiver_id: str, offered_book_ids: list[str], requested_book_ids: list[str]) -> dict:
+    # Create a swap request with possibly multiple books on either side of swap
+    request_result = supabase.table("swap_requests").insert({
+        "requester_id": requester_id,
+        "receiver_id": receiver_id,
+        "status": "pending"
+    }).execute()
     
-    test_books = [ # Dummy book
-        {
-            "title": "Atomic Habits",
-            "author": "James Clear",
-            "genre": "Self-Help",
-            "description": "A proven framework for improving every day.",
-            "page_count": 320,
-            "avg_rating": 4.5,
-            "thumbnail": "",
-            "retail_price": 13.99
-        }
-    ]
-    
-    print("Saving test books to Supabase...\n")
-    saved = save_books_for_user(user["id"], test_books)
-    
-    print("\nRetrieving books from Supabase...\n")
-    retrieved = get_user_books(user["id"])
-    print(f"Found {len(retrieved)} books for user")
-    for book in retrieved:
-        print(f"- {book['title']} by {book['author']}")
+    request = request_result.data[0]
+    request_id = request["id"]
+
+    # Insert offered and requested books (separate tags) into supabase table
+    for book_id in offered_book_ids:
+        supabase.table("swap_request_books").insert({
+            "swap_request_id": request_id,
+            "book_id": book_id,
+            "side": "offered"
+        }).execute()
+
+    for book_id in requested_book_ids:
+        supabase.table("swap_request_books").insert({
+            "swap_request_id": request_id,
+            "book_id": book_id,
+            "side": "requested"
+        }).execute()
+
+    return request
+
+def get_swap_requests_for_user(user_id: str) -> dict:
+    # Get all incoming and outgoing swap requests involving a user's books
+    def enrich_requests(requests: list[dict]) -> list[dict]:
+        enriched = []
+        for r in requests:
+            # Get all books on each side of this request (as they are stored in swap_request_books table)
+            books_result = supabase.table("swap_request_books")\
+                .select("side, books(id, title, author)")\
+                .eq("swap_request_id", r["id"])\
+                .execute()
+            offered = [b["books"] for b in books_result.data if b["side"] == "offered"]
+            requested = [b["books"] for b in books_result.data if b["side"] == "requested"]
+            enriched.append({
+                **r,
+                "offered_books": offered,
+                "requested_books": requested
+            })
+        return enriched
+
+    incoming = supabase.table("swap_requests")\
+        .select("*, requester:requester_id(username)")\
+        .eq("receiver_id", user_id)\
+        .eq("status", "pending")\
+        .execute() # Which swap requests involving this user are requests sent to them
+
+    outgoing = supabase.table("swap_requests")\
+        .select("*, receiver:receiver_id(username)")\
+        .eq("requester_id", user_id)\
+        .execute() # Which swap requests involving this user are requests sent by them
+
+    return {
+        "incoming": enrich_requests(incoming.data),
+        "outgoing": enrich_requests(outgoing.data)
+    }
+
+def update_swap_request_status(request_id: str, status: str) -> dict:
+    # Accept or reject a swap request, and tag all involved books as 'unavailable' if accepted
+    result = supabase.table("swap_requests")\
+        .update({"status": status})\
+        .eq("id", request_id)\
+        .execute()
+
+    if status == "accepted":
+        # Get all books involved in this request and then tag them as 'unavailable'
+        books_result = supabase.table("swap_request_books")\
+            .select("book_id")\
+            .eq("swap_request_id", request_id)\
+            .execute()
+        
+        for book in books_result.data:
+            supabase.table("books")\
+                .update({"is_available": False})\
+                .eq("id", book["book_id"])\
+                .execute()
+
+    return result.data[0]
