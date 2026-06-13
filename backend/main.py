@@ -38,4 +38,74 @@ class SwapRequestCreate(BaseModel):
 class SwapStatusUpdate(BaseModel):
     status: str  # "accepted" or "rejected"
 
-# TODO All endpoints.
+# User endpoint
+@app.post("/users")
+async def register_user(body: CreateUserRequest):
+    try:
+        user = create_user(body.username, body.email, body.location)
+        return user
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e)) # Client error (e.g. wrong formatting)
+    
+# Pipeline endpoint
+@app.post("/pipeline/{user_id}")
+async def run_book_pipeline(user_id: str, file: UploadFile = File(...)):
+    temp_path = f"temp_{uuid.uuid4().hex}.jpg" # Save uploaded image temporarily
+    try:
+        with open(temp_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        
+        books = run_pipeline(temp_path, user_id)
+        return {"message": f"{len(books)} books saved", "books": books}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)) # Server error
+    finally:
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+
+# Search endpoint
+@app.get("/search")
+async def search_books(query: str, user_id: str):
+    try:
+        results = search_books_by_title(query, user_id)
+        return {"results": results}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+# Swap endpoint
+@app.post("/swaps") # Create swap request
+async def create_swap(body: SwapRequestCreate):
+    try:
+        request = create_swap_request(
+            body.requester_id,
+            body.receiver_id,
+            body.offered_book_ids,
+            body.requested_book_ids
+        )
+        return request
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e)) 
+
+@app.get("/swaps/{user_id}") # Retrieve all swaps involving a user
+async def get_swaps(user_id: str):
+    try:
+        return get_swap_requests_for_user(user_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)) 
+
+@app.put("/swaps/{request_id}") # Update swap status
+async def update_swap(request_id: str, body: SwapStatusUpdate):
+    if body.status not in ["accepted", "rejected"]:
+        raise HTTPException(status_code=400, detail="Status must be 'accepted' or 'rejected'")
+    try:
+        return update_swap_request_status(request_id, body.status)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/users/{user_id}/books") # Get all books owned by a user
+async def get_books(user_id: str):
+    try:
+        return get_user_books(user_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
