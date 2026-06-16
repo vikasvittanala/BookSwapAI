@@ -8,10 +8,14 @@ from database import (
     get_user_books,
     create_swap_request,
     get_swap_requests_for_user,
-    update_swap_request_status
+    update_swap_request_status,
+    has_used_shelf_scan, 
+    mark_shelf_scan_used,
+    is_duplicate_book
 )
 from pipeline import run_pipeline
 from search import search_books_by_title
+from google_books_enrichment import enrich_with_google_books
 
 app = FastAPI(title="BookSwapAI API") # Creates the website backend / server
 
@@ -38,6 +42,11 @@ class SwapRequestCreate(BaseModel):
 class SwapStatusUpdate(BaseModel):
     status: str  # "accepted" or "rejected"
 
+class ManualBookRequest(BaseModel):
+    user_id: str
+    title: str
+    author: str = ""
+
 # User endpoint
 @app.post("/users")
 async def register_user(body: CreateUserRequest):
@@ -50,6 +59,12 @@ async def register_user(body: CreateUserRequest):
 # Pipeline endpoint
 @app.post("/pipeline/{user_id}")
 async def run_book_pipeline(user_id: str, file: UploadFile = File(...)):
+    if has_used_shelf_scan(user_id): # Enforce one-use limit on shelf scanner
+        raise HTTPException(
+            status_code=400,
+            detail="Shelf upload already used. Add more books manually instead."
+        )
+
     temp_path = f"temp_{uuid.uuid4().hex}.jpg" # Save uploaded image temporarily
     try:
         with open(temp_path, "wb") as buffer:
@@ -62,6 +77,22 @@ async def run_book_pipeline(user_id: str, file: UploadFile = File(...)):
     finally:
         if os.path.exists(temp_path):
             os.remove(temp_path)
+
+# Manual book entry endpoint
+@app.post("/books/manual")
+async def add_manual_book(body: ManualBookRequest):
+
+    if is_duplicate_book(body.user_id, body.title, body.author):
+        raise HTTPException(status_code=400, detail="You already own this book")
+
+    enriched = enrich_with_google_books(body.title, body.author)
+    if not enriched:
+        raise HTTPException(status_code=404, detail="Book not found, or could not be verified")
+    
+    saved = save_books_for_user(body.user_id, [enriched])
+    if not saved:
+        raise HTTPException(status_code=400, detail="You already own this book")
+    return saved[0]
 
 # Search endpoint
 @app.get("/search")

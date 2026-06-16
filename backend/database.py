@@ -9,9 +9,13 @@ supabase: Client = create_client(
     os.getenv("SUPABASE_KEY")
 )
 
-def save_books_for_user(user_id: str, books: list[dict]) -> list[dict]: # Save a list of books for certain user to Supabase
+# Save a list of books for certain user to Supabase
+def save_books_for_user(user_id: str, books: list[dict]) -> list[dict]:
     saved = []
     for book in books:
+        if is_duplicate_book(user_id, book.get("title", ""), book.get("author", "")): # Skip if book is already in user's list
+            print(f"⏭ Skipped duplicate: {book.get('title')}")
+            continue
         data = {
             "user_id": user_id,
             "title": book.get("title"),
@@ -29,11 +33,13 @@ def save_books_for_user(user_id: str, books: list[dict]) -> list[dict]: # Save a
         print(f"Saved: {book.get('title')}")
     return saved # To show what was inserted
 
-def get_user_books(user_id: str) -> list[dict]: # Retrieve all available books of a certain user from Supabase
+# Retrieve all available books of a certain user from Supabase
+def get_user_books(user_id: str) -> list[dict]:
     result = supabase.table("books").select("*").eq("user_id", user_id).eq("is_available", True).execute()
     return result.data
 
-def create_user(username: str, email: str, location: str = None) -> dict: # Create new user in Supabase
+# Create new user in Supabase
+def create_user(username: str, email: str, location: str = None) -> dict:
     data = {
         "id": str(__import__('uuid').uuid4()),
         "username": username,
@@ -42,6 +48,25 @@ def create_user(username: str, email: str, location: str = None) -> dict: # Crea
     }
     result = supabase.table("users").insert(data).execute()
     return result.data[0]
+
+# Check if user already owns a book with this title and author
+def is_duplicate_book(user_id: str, title: str, author: str) -> bool:
+    result = supabase.table("books")\
+        .select("id")\
+        .eq("user_id", user_id)\
+        .ilike("title", title)\
+        .ilike("author", author)\
+        .execute()
+    return len(result.data) > 0
+
+# Tag that a user has used the shelf scanner before
+def mark_shelf_scan_used(user_id: str) -> None:
+    supabase.table("users").update({"has_used_shelf_scan": True}).eq("id", user_id).execute()
+
+# Check the tag whether a user has used the shelf scanner before
+def has_used_shelf_scan(user_id: str) -> bool:
+    result = supabase.table("users").select("has_used_shelf_scan").eq("id", user_id).execute()
+    return result.data[0]["has_used_shelf_scan"] if result.data else False
 
 def create_swap_request(requester_id: str, receiver_id: str, offered_book_ids: list[str], requested_book_ids: list[str]) -> dict:
     # Create a swap request with possibly multiple books on either side of swap
