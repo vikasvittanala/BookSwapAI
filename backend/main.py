@@ -71,6 +71,7 @@ async def run_book_pipeline(user_id: str, file: UploadFile = File(...)):
             shutil.copyfileobj(file.file, buffer)
         
         books = run_pipeline(temp_path, user_id)
+        mark_shelf_scan_used(user_id)
         return {"message": f"{len(books)} books saved", "books": books}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) # Server error
