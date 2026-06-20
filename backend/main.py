@@ -11,7 +11,8 @@ from database import (
     update_swap_request_status,
     has_used_shelf_scan, 
     mark_shelf_scan_used,
-    is_duplicate_book
+    is_duplicate_book,
+    get_user_by_email
 )
 from pipeline import run_pipeline
 from search import search_books_by_title
@@ -50,12 +51,28 @@ class ManualBookRequest(BaseModel):
 # User endpoint
 @app.post("/users")
 async def register_user(body: CreateUserRequest):
+    from database import get_user_by_email
+    
+    existing = get_user_by_email(body.email)
+    if existing:
+        raise HTTPException(
+            status_code=400,
+            detail="An account with that email already exists. Try logging in instead."
+        )
     try:
         user = create_user(body.username, body.email, body.location)
         return user
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e)) # Client error (e.g. wrong formatting)
-    
+        raise HTTPException(status_code=400, detail="Registration failed. Please try again.")
+
+# User login endpoint
+@app.get("/users/login")
+async def login_user(email: str):
+    user = get_user_by_email(email)
+    if not user:
+        raise HTTPException(status_code=404, detail="No account found with that email")
+    return user
+
 # Pipeline endpoint
 @app.post("/pipeline/{user_id}")
 async def run_book_pipeline(user_id: str, file: UploadFile = File(...)):
@@ -94,6 +111,15 @@ async def add_manual_book(body: ManualBookRequest):
     if not saved:
         raise HTTPException(status_code=400, detail="You already own this book")
     return saved[0]
+
+# Manual book deletion endpoint
+@app.delete("/books/{book_id}")
+async def remove_book(book_id: str, user_id: str):
+    from database import delete_book
+    success = delete_book(book_id, user_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Book not found or you don't own it")
+    return {"message": "Book removed"}
 
 # Search endpoint
 @app.get("/search")

@@ -1,39 +1,20 @@
-.container {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 2rem;
-  font-family: sans-serif;
+@import "tailwindcss";
+
+@theme {
+  --color-burgundy: #800020;
+  --color-burgundy-dark: #5c0017;
+  --color-charcoal: #374151;
+  --color-cream: #F5F3E7;
+  --color-cream-dark: #ECE8D9;
+  --color-teal: #008080;
+  --color-teal-dark: #006666;
+
+  --font-display: 'Fraunces', serif;
+  --font-body: 'Inter', sans-serif;
 }
 
-.search-bar {
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 2rem;
-}
-
-.search-bar input {
-  flex: 1;
-  padding: 0.5rem;
-  font-size: 1rem;
-}
-
-.search-bar button {
-  padding: 0.5rem 1rem;
-  font-size: 1rem;
-  cursor: pointer;
-}
-
-.book-card {
-  display: flex;
-  gap: 1rem;
-  padding: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  margin-bottom: 1rem;
-}
-
-.book-card img {
-  width: 80px;
-  height: 120px;
-  object-fit: cover;
+body {
+  background-color: var(--color-cream);
+  color: var(--color-charcoal);
+  font-family: var(--font-body);
 }

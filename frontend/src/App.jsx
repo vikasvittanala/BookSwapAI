@@ -9,10 +9,25 @@ function App() {
 
   return (
     <BrowserRouter>
-      <nav className="navbar">
-        <Link to="/register">Register</Link>
-        <Link to="/search">Search</Link>
-        {user && <span className="logged-in-as">Logged in as {user.username}</span>}
+      <nav className="border-b border-charcoal/15 bg-cream">
+        <div className="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between">
+          <Link to="/register" className="font-display text-xl font-semibold text-burgundy">
+            BookSwap <span className="text-teal">AI</span>
+          </Link>
+          <div className="flex items-center gap-6">
+            <Link to="/register" className="text-sm font-medium text-charcoal hover:text-burgundy transition-colors">
+              My shelf
+            </Link>
+            <Link to="/search" className="text-sm font-medium text-charcoal hover:text-burgundy transition-colors">
+              Search
+            </Link>
+            {user && (
+              <span className="text-xs font-medium text-teal-dark bg-teal/10 px-3 py-1 rounded-full">
+                {user.username}
+              </span>
+            )}
+          </div>
+        </div>
       </nav>
       <Routes>
         <Route path="/register" element={<Register user={user} setUser={setUser} />} />
