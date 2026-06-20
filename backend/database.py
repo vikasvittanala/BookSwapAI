@@ -49,6 +49,11 @@ def create_user(username: str, email: str, location: str = None) -> dict:
     result = supabase.table("users").insert(data).execute()
     return result.data[0]
 
+# Look up an existing user by email
+def get_user_by_email(email: str) -> dict | None:
+    result = supabase.table("users").select("*").eq("email", email).execute()
+    return result.data[0] if result.data else None
+
 # Check if user already owns a book with this title and author
 def is_duplicate_book(user_id: str, title: str, author: str) -> bool:
     result = supabase.table("books")\
@@ -56,6 +61,15 @@ def is_duplicate_book(user_id: str, title: str, author: str) -> bool:
         .eq("user_id", user_id)\
         .ilike("title", title)\
         .ilike("author", author)\
+        .execute()
+    return len(result.data) > 0
+
+# Delete a book (only if it belongs to the requesting user)
+def delete_book(book_id: str, user_id: str) -> bool:
+    result = supabase.table("books")\
+        .delete()\
+        .eq("id", book_id)\
+        .eq("user_id", user_id)\
         .execute()
     return len(result.data) > 0
 
