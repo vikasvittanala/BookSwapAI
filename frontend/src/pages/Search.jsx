@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import axios from 'axios'
+import SwapModal from './components/SwapModal'
 
 const API_URL = 'http://localhost:8000'
 
@@ -8,6 +9,8 @@ function Search({ user }) {
   const [results, setResults] = useState([])
   const [loading, setLoading] = useState(false)
   const [searched, setSearched] = useState(false)
+  const [swapTarget, setSwapTarget] = useState(null)
+  const [swapSuccess, setSwapSuccess] = useState(false)
 
   const handleSearch = async () => {
     if (!user) {
@@ -88,12 +91,36 @@ function Search({ user }) {
                     Owned by <span className="font-medium text-charcoal">{book.users?.username}</span>
                   </p>
                   <p className="text-xs text-charcoal/50">{book.users?.location}</p>
+                  <button
+                    onClick={() => setSwapTarget(book)}
+                    className="mt-3 w-full bg-burgundy text-cream text-xs font-medium py-1.5 rounded hover:bg-burgundy-dark transition-colors"
+                  >
+                    Request swap
+                  </button>
                 </div>
               </div>
             </div>
           </div>
         ))}
       </div>
+      {swapTarget && (
+        <SwapModal
+          targetBook={swapTarget}
+          currentUser={user}
+          onClose={() => setSwapTarget(null)}
+          onSuccess={() => {
+            setSwapTarget(null)
+            setSwapSuccess(true)
+            setTimeout(() => setSwapSuccess(false), 3000)
+          }}
+        />
+      )}
+
+      {swapSuccess && (
+        <div className="fixed bottom-6 right-6 bg-teal text-cream text-sm font-medium px-5 py-3 rounded-lg shadow-lg">
+          Swap request sent ✓
+        </div>
+      )}
     </div>
   )
 }
