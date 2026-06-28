@@ -35,16 +35,17 @@ def save_books_for_user(user_id: str, books: list[dict]) -> list[dict]:
 
 # Retrieve all available books of a certain user from Supabase
 def get_user_books(user_id: str) -> list[dict]:
-    result = supabase.table("books").select("*").eq("user_id", user_id).eq("is_available", True).execute()
+    result = supabase.table("books").select("*").eq("user_id", user_id).execute()
     return result.data
 
 # Create new user in Supabase
-def create_user(username: str, email: str, location: str = None) -> dict:
+def create_user(username: str, email: str, location: str = None, telegram_handle: str = None) -> dict:
     data = {
         "id": str(__import__('uuid').uuid4()),
         "username": username,
         "email": email,
-        "location": location
+        "location": location,
+        "telegram_handle" : telegram_handle or "User did not provide a Telegram handle"
     }
     result = supabase.table("users").insert(data).execute()
     return result.data[0]
@@ -117,7 +118,7 @@ def get_swap_requests_for_user(user_id: str) -> dict:
         for r in requests:
             # Get all books on each side of this request (as they are stored in swap_request_books table)
             books_result = supabase.table("swap_request_books")\
-                .select("side, books(id, title, author)")\
+                .select("side, books(id, title, author, thumbnail)")\
                 .eq("swap_request_id", r["id"])\
                 .execute()
             offered = [b["books"] for b in books_result.data if b["side"] == "offered"]
@@ -130,13 +131,12 @@ def get_swap_requests_for_user(user_id: str) -> dict:
         return enriched
 
     incoming = supabase.table("swap_requests")\
-        .select("*, requester:requester_id(username)")\
+        .select("*, requester:requester_id(username, telegram_handle)")\
         .eq("receiver_id", user_id)\
-        .eq("status", "pending")\
         .execute() # Which swap requests involving this user are requests sent to them
 
     outgoing = supabase.table("swap_requests")\
-        .select("*, receiver:receiver_id(username)")\
+        .select("*, receiver:receiver_id(username, telegram_handle)")\
         .eq("requester_id", user_id)\
         .execute() # Which swap requests involving this user are requests sent by them
 

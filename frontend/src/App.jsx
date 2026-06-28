@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
 import Register from './pages/Register'
 import Search from './pages/Search'
+import Swaps from './pages/Swaps'
 import './App.css'
 
 function App() {
@@ -21,6 +22,9 @@ function App() {
             <Link to="/search" className="text-sm font-medium text-charcoal hover:text-burgundy transition-colors">
               Search
             </Link>
+            <Link to="/swaps" className="text-sm font-medium text-charcoal hover:text-burgundy transition-colors">
+              Swaps
+            </Link>
             {user && (
               <span className="text-xs font-medium text-teal-dark bg-teal/10 px-3 py-1 rounded-full">
                 {user.username}
@@ -32,6 +36,7 @@ function App() {
       <Routes>
         <Route path="/register" element={<Register user={user} setUser={setUser} />} />
         <Route path="/search" element={<Search user={user} />} />
+        <Route path="/swaps" element={<Swaps user={user} />} />
         <Route path="/" element={<Register user={user} setUser={setUser} />} />
       </Routes>
     </BrowserRouter>

@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import axios from 'axios'
+import SwapModal from './components/SwapModal'
 
 const API_URL = 'http://localhost:8000'
 
@@ -8,6 +9,9 @@ function Search({ user }) {
   const [results, setResults] = useState([])
   const [loading, setLoading] = useState(false)
   const [searched, setSearched] = useState(false)
+  const [swapTarget, setSwapTarget] = useState(null)
+  const [swapSuccess, setSwapSuccess] = useState(false)
+  const [sentRequests, setSentRequests] = useState(new Set())
 
   const handleSearch = async () => {
     if (!user) {
@@ -28,6 +32,26 @@ function Search({ user }) {
     }
   }
 
+  useEffect(() => {
+  if (!user || results.length === 0) return
+
+  const fetchExistingRequests = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/swaps/${user.id}`)
+      const outgoing = res.data.outgoing
+
+      // Extract the requested book ids from outgoing requests
+      const requestedBookIds = new Set(
+        outgoing.flatMap(r => r.requested_books.map(b => b.id))
+      )
+      setSentRequests(requestedBookIds)
+    } catch (err) {
+      console.error('Failed to fetch existing requests:', err)
+    }
+  }
+
+  fetchExistingRequests()
+}, [user, results])
   return (
     <div className="max-w-3xl mx-auto px-6 py-12">
       <p className="font-body text-xs tracking-widest text-teal font-medium mb-1">FIND A SWAP</p>
@@ -87,13 +111,47 @@ function Search({ user }) {
                   <p className="text-xs text-charcoal/70">
                     Owned by <span className="font-medium text-charcoal">{book.users?.username}</span>
                   </p>
-                  <p className="text-xs text-charcoal/50">{book.users?.location}</p>
+                  {sentRequests.has(book.id) ? (
+                    <button
+                      disabled
+                      className="mt-3 w-full bg-charcoal/20 text-charcoal/50 text-xs font-medium py-1.5 rounded cursor-not-allowed"
+                    >
+                      Request sent ✓
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setSwapTarget(book)}
+                      className="mt-3 w-full bg-burgundy text-cream text-xs font-medium py-1.5 rounded hover:bg-burgundy-dark transition-colors"
+                    >
+                      Request swap
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
           </div>
         ))}
       </div>
+      {swapTarget && (
+        <SwapModal
+          targetBook={swapTarget}
+          currentUser={user}
+          onClose={() => setSwapTarget(null)}
+          onSuccess={() => {
+            const bookId = swapTarget.id
+            setSwapTarget(null)
+            setSentRequests(prev => new Set([...prev, bookId]))
+            setSwapSuccess(true)
+            setTimeout(() => setSwapSuccess(false), 3000)
+          }}
+        />
+      )}
+
+      {swapSuccess && (
+        <div className="fixed bottom-6 right-6 bg-teal text-cream text-sm font-medium px-5 py-3 rounded-lg shadow-lg">
+          Swap request sent ✓
+        </div>
+      )}
     </div>
   )
 }
