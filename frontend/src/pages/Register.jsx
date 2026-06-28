@@ -4,7 +4,7 @@ import axios from 'axios'
 const API_URL = 'http://localhost:8000'
 
 function Register({ user, setUser }) {
-  const [form, setForm] = useState({ username: '', email: '', location: '' })
+  const [form, setForm] = useState({ username: '', email: '', telegram_handle: '' })
   const [shelfFile, setShelfFile] = useState(null)
   const [manualBook, setManualBook] = useState({ title: '', author: '' })
   const [myBooks, setMyBooks] = useState([])
@@ -137,9 +137,9 @@ function Register({ user, setUser }) {
               />
               <input
                 className="w-full border border-charcoal/25 rounded px-3 py-2 text-sm focus:outline-none focus:border-teal"
-                placeholder="Location (e.g. Tampines)"
-                value={form.location}
-                onChange={(e) => setForm({ ...form, location: e.target.value })}
+                placeholder="Telegram handle (optional)"
+                value={form.telegram_handle}
+                onChange={(e) => setForm({ ...form, telegram_handle: e.target.value })}
               />
               <button
                 onClick={handleRegister}
@@ -223,20 +223,27 @@ function Register({ user, setUser }) {
             <h2 className="font-display text-lg font-semibold mb-4">Your books ({myBooks.length})</h2>
             <div className="grid grid-cols-2 gap-4">
               {myBooks.map((book, i) => (
-                <div key={i} className="bg-white border border-charcoal/20 rounded-lg p-4 flex gap-3">
+                <div key={i} className="bg-white border border-charcoal/20 rounded-lg p-4 flex gap-3 relative">
                   {book.thumbnail && (
                     <img src={book.thumbnail} alt={book.title} className="w-12 h-18 object-cover rounded" />
                   )}
                   <div className="flex-1 min-w-0">
                     <p className="font-display font-medium text-sm leading-snug">{book.title}</p>
                     <p className="text-charcoal/60 text-xs mt-1">{book.author}</p>
+                    {!book.is_available && (
+                      <span className="inline-block mt-1 text-[10px] font-medium tracking-wide text-burgundy bg-burgundy/10 px-2 py-0.5 rounded-full">
+                        SWAPPED
+                      </span>
+                    )}
                   </div>
-                  <button
-                    onClick={() => handleDeleteBook(book.id)}
-                    className="text-charcoal/40 hover:text-burgundy text-xs font-medium self-start"
-                  >
-                    Remove
-                  </button>
+                  {book.is_available && (
+                    <button
+                      onClick={() => handleDeleteBook(book.id)}
+                      className="text-charcoal/40 hover:text-burgundy text-xs font-medium self-start"
+                    >
+                      Remove
+                    </button>
+                  )}
                 </div>
               ))}
             </div>

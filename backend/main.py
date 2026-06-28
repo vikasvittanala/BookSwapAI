@@ -33,6 +33,7 @@ class CreateUserRequest(BaseModel):
     username: str
     email: str
     location: str = None
+    telegram_handle: str = None
 
 class SwapRequestCreate(BaseModel):
     requester_id: str
@@ -60,7 +61,7 @@ async def register_user(body: CreateUserRequest):
             detail="An account with that email already exists. Try logging in instead."
         )
     try:
-        user = create_user(body.username, body.email, body.location)
+        user = create_user(body.username, body.email, body.location, body.telegram_handle)
         return user
     except Exception as e:
         raise HTTPException(status_code=400, detail="Registration failed. Please try again.")
