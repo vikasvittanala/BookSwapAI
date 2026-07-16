@@ -56,10 +56,10 @@ function Search({ user }) {
     <div className="max-w-3xl mx-auto px-6 py-12">
       <p className="font-body text-xs tracking-widest text-teal font-medium mb-1">FIND A SWAP</p>
       <h1 className="font-display text-4xl font-semibold text-burgundy mb-2 leading-tight">
-        Search the shelves.
+        Search all the shelves.
       </h1>
       <p className="text-charcoal/70 text-sm mb-8">
-        Find readers near you who own the book you're after.
+        Find books nearby, from readers like you.
       </p>
 
       {!user && (
@@ -79,7 +79,7 @@ function Search({ user }) {
         />
         <button
           onClick={handleSearch}
-          className="bg-burgundy text-cream font-medium text-sm px-6 py-3 rounded hover:bg-burgundy-dark transition-colors whitespace-nowrap"
+          className="bg-teal text-cream font-medium text-sm px-6 py-3 rounded hover:bg-teal-dark transition-colors whitespace-nowrap"
         >
           Search
         </button>
@@ -88,7 +88,7 @@ function Search({ user }) {
       {loading && <p className="text-charcoal/60 text-sm">Searching the shelves...</p>}
 
       {!loading && searched && results.length === 0 && (
-        <p className="text-charcoal/60 text-sm">No copies of that book found nearby yet.</p>
+        <p className="text-charcoal/60 text-sm">No copies of that book were found.</p>
       )}
 
       <div className="grid grid-cols-2 gap-4">
