@@ -1,6 +1,6 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 import shutil, os, uuid
 from database import (
     create_user,
@@ -34,6 +34,13 @@ class CreateUserRequest(BaseModel):
     email: str
     location: str = None
     telegram_handle: str = None
+
+    @field_validator("username", "email")
+    @classmethod
+    def not_blank(cls, v):
+        if not v or not v.strip():
+            raise ValueError("This field is required")
+        return v.strip()
 
 class SwapRequestCreate(BaseModel):
     requester_id: str

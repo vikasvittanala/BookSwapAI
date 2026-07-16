@@ -104,29 +104,29 @@ function Swaps({ user }) {
                 {/* Swap visual */}
                 <div className="flex items-center gap-3">
                   <div className="flex-1 space-y-1">
-                    <p className="text-xs text-charcoal/50 tracking-wide">THEY OFFER</p>
+                    <p className="text-sm text-charcoal/65 tracking-wide font-medium mb-1">THEY OFFER</p>
                     {request.offered_books?.map((book, i) => (
-                      <div key={i} className="bg-cream border border-charcoal/15 rounded p-2 flex gap-2 items-center">
+                      <div key={i} className="bg-cream border border-charcoal/15 rounded-lg p-3 flex gap-3 items-center">
                         {book.thumbnail && (
-                            <img src={book.thumbnail} alt={book.title} className="w-8 h-11 object-cover rounded shrink-0" />
+                            <img src={book.thumbnail} alt={book.title} className="w-14 h-20 object-cover rounded shrink-0" />
                         )}
                         <div className="min-w-0">
-                            <p className="font-display text-sm font-medium truncate">{book.title}</p>
-                            <p className="text-xs text-charcoal/60 truncate">{book.author}</p>
+                            <p className="font-display text-base font-semibold leading-snug">{book.title}</p>
+                            <p className="text-sm text-charcoal/60 truncate">{book.author}</p>
                         </div>
                         </div>
                     ))}
                   </div>
-                  <span className="text-charcoal/30 text-lg">⟷</span>
+                  <span className="text-charcoal/50 text-2xl">⟷</span>
                   <div className="flex-1 space-y-1">
-                    <p className="text-xs text-charcoal/50 tracking-wide">FOR YOUR</p>
+                    <p className="text-sm text-charcoal/65 tracking-wide font-medium mb-1">FOR YOUR</p>
                     {request.requested_books?.map((book, i) => (
-                      <div key={i} className="bg-cream border border-charcoal/15 rounded p-2 flex gap-2 items-center">
+                      <div key={i} className="bg-cream border border-charcoal/15 rounded-lg p-3 flex gap-3 items-center">
                         {book.thumbnail && (
-                            <img src={book.thumbnail} alt={book.title} className="w-8 h-11 object-cover rounded shrink-0" />
+                            <img src={book.thumbnail} alt={book.title} className="w-14 h-20 object-cover rounded shrink-0" />
                         )}
                         <div className="min-w-0">
-                            <p className="font-display text-sm font-medium truncate">{book.title}</p>
+                            <p className="font-display text-base font-semibold leading-snug">{book.title}</p>
                             <p className="text-xs text-charcoal/60 truncate">{book.author}</p>
                         </div>
                         </div>
@@ -206,30 +206,30 @@ function Swaps({ user }) {
 
               <div className="flex items-center gap-3">
                 <div className="flex-1 space-y-1">
-                  <p className="text-xs text-charcoal/50 tracking-wide">YOU OFFERED</p>
+                  <p className="text-sm text-charcoal/65 tracking-wide font-medium mb-1">YOU OFFERED</p>
                   {request.offered_books?.map((book, i) => (
-                    <div key={i} className="bg-cream border border-charcoal/15 rounded p-2 flex gap-2 items-center">
+                    <div key={i} className="bg-cream border border-charcoal/15 rounded p-3 flex gap-3 items-center">
                         {book.thumbnail && (
-                            <img src={book.thumbnail} alt={book.title} className="w-8 h-11 object-cover rounded shrink-0" />
+                            <img src={book.thumbnail} alt={book.title} className="w-14 h-20 object-cover rounded shrink-0" />
                         )}
                         <div className="min-w-0">
-                            <p className="font-display text-sm font-medium truncate">{book.title}</p>
-                            <p className="text-xs text-charcoal/60 truncate">{book.author}</p>
+                            <p className="font-display text-base font-semibold leading-snug">{book.title}</p>
+                            <p className="text-sm text-charcoal/60 truncate">{book.author}</p>
                         </div>
                         </div>
                   ))}
                 </div>
-                <span className="text-charcoal/30 text-lg">⟷</span>
+                <span className="text-charcoal/50 text-2xl">⟷</span>
                 <div className="flex-1 space-y-1">
-                  <p className="text-xs text-charcoal/50 tracking-wide">FOR THEIR</p>
+                  <p className="text-sm text-charcoal/65 tracking-wide font-medium mb-1">FOR THEIR</p>
                   {request.requested_books?.map((book, i) => (
-                    <div key={i} className="bg-cream border border-charcoal/15 rounded p-2 flex gap-2 items-center">
+                    <div key={i} className="bg-cream border border-charcoal/15 rounded p-3 flex gap-3 items-center">
                         {book.thumbnail && (
-                            <img src={book.thumbnail} alt={book.title} className="w-8 h-11 object-cover rounded shrink-0" />
+                            <img src={book.thumbnail} alt={book.title} className="w-14 h-20 object-cover rounded shrink-0" />
                         )}
                         <div className="min-w-0">
-                            <p className="font-display text-sm font-medium truncate">{book.title}</p>
-                            <p className="text-xs text-charcoal/60 truncate">{book.author}</p>
+                            <p className="font-display text-base font-semibold leading-snug">{book.title}</p>
+                            <p className="text-sm text-charcoal/60 truncate">{book.author}</p>
                         </div>
                         </div>
                   ))}
