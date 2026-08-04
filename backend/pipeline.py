@@ -33,7 +33,6 @@ if __name__ == "__main__": # If this file is run manually
     user = create_user( # Dummy user
         username="pipeline_test_user",
         email=f"pipeline_{uuid.uuid4().hex[:6]}@test.com",
-        location="Singapore"
     )
     print(f"Test user created: {user['id']}")
 

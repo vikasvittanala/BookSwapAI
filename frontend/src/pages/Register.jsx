@@ -1,17 +1,18 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 
-const API_URL = 'http://localhost:8000'
+const API_URL = import.meta.env.VITE_API_URL
 
 // Rotate a small set of muted cover colors by genre so placeholders don't all look identical
 const GENRE_COLORS = {
-  'Fiction': ['#e6d4d9', '#800020'],
+  'Fiction': ['#ead1ff', '#9e28ff'],
   'Self-help': ['#e8dfc4', '#800020'],
   'Psychology': ['#cfe3e3', '#006666'],
   'History': ['#e0dcc9', '#374151'],
-  'Science': ['#d7e4d9', '#2f5233'],
+  'Science': ['#ffffc4', '#c7c736'],
+  'Business & Economics': ['#daffe0', '#258630'],
 }
-const DEFAULT_COLOR = ['#e0dcc9', '#374151']
+const DEFAULT_COLOR = ['#F5F3E7', '#006666']
 
 function BookCover({ book }) {
   if (book.thumbnail) {
@@ -38,18 +39,24 @@ function BookCover({ book }) {
 }
 
 function Register({ user, setUser }) {
-  const [form, setForm] = useState({ username: '', email: '', telegram_handle: '' })
+  const [form, setForm] = useState({ username: '', password: '', telegram_handle: '' })
   const [shelfFile, setShelfFile] = useState(null)
   const [manualBook, setManualBook] = useState({ title: '', author: '' })
   const [myBooks, setMyBooks] = useState([])
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [mode, setMode] = useState('register')
-  const [loginEmail, setLoginEmail] = useState('')
+  const [loginUsername, setLoginUsername] = useState('')
+  const [loginPassword, setLoginPassword] = useState('')
   const [activePanel, setActivePanel] = useState('scan') // null | 'scan' | 'manual'
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null)
+  const [scanUsed, setScanUsed] = useState(false)
 
   useEffect(() => {
     if (user) fetchMyBooks()
+  }, [user])
+  useEffect(() => {
+  if (user) setScanUsed(!!user.has_used_shelf_scan)
   }, [user])
 
   const fetchMyBooks = async () => {
@@ -62,9 +69,15 @@ function Register({ user, setUser }) {
   }
 
   const handleRegister = async () => {
-    if (!form.username.trim() || !form.email.trim()) {
-      setMessage('Username and email are required.')
+    if (!form.username.trim() || !form.password.trim() || !form.telegram_handle.trim()) {
+      setMessage('Username, password and telegram are required.')
+      setTimeout(() => setMessage(''), 4000)
       return
+    }
+    if (form.password.length < 6) {
+    setMessage('Password must be at least 6 characters')
+    setTimeout(() => setMessage(''), 4000)
+    return
     }
     try {
       const res = await axios.post(`${API_URL}/users`, form)
@@ -72,23 +85,40 @@ function Register({ user, setUser }) {
       setMessage(`Account created. Welcome, ${res.data.username}.`)
     } catch (err) {
       setMessage(err.response?.data?.detail || 'Registration failed')
+      setTimeout(() => setMessage(''), 4000)
     }
   }
 
   const handleLogin = async () => {
+    if (!loginUsername.trim() || !loginPassword.trim()) {
+    setMessage('Username and password are required.')
+    setTimeout(() => setMessage(''), 4000)
+    return
+    }
     try {
-      const res = await axios.get(`${API_URL}/users/login`, {
-        params: { email: loginEmail }
+      const res = await axios.post(`${API_URL}/users/login`, {
+        username: loginUsername,
+        password: loginPassword
       })
       setUser(res.data)
       setMessage(`Welcome back, ${res.data.username}.`)
     } catch (err) {
       setMessage(err.response?.data?.detail || 'Login failed')
+      setTimeout(() => setMessage(''), 4000)
     }
   }
 
   const handleShelfUpload = async () => {
-    if (!shelfFile || !user) return
+    if (scanUsed) {
+    setMessage("You've already scanned your shelf. Add books manually instead.")
+    setTimeout(() => setMessage(''), 4000)
+    return
+    }
+    if (!shelfFile || !user) {
+    setMessage('Please choose a file first.')
+    setTimeout(() => setMessage(''), 4000)
+    return
+    }
     setLoading(true)
     setMessage('')
     const formData = new FormData()
@@ -99,16 +129,21 @@ function Register({ user, setUser }) {
       })
       await fetchMyBooks()
       setMessage(res.data.message)
-      setActivePanel(null)
+      setScanUsed(true)
     } catch (err) {
       setMessage(err.response?.data?.detail || 'Upload failed')
+      setTimeout(() => setMessage(''), 10000)
     } finally {
       setLoading(false)
     }
   }
 
   const handleManualAdd = async () => {
-    if (!manualBook.title || !user) return
+    if (!manualBook.title || !user) {
+    setMessage('Please enter a book title.')
+    setTimeout(() => setMessage(''), 4000)
+    return
+  }
     try {
       const res = await axios.post(`${API_URL}/books/manual`, {
         user_id: user.id,
@@ -118,9 +153,9 @@ function Register({ user, setUser }) {
       await fetchMyBooks()
       setManualBook({ title: '', author: '' })
       setMessage(`Added: ${res.data.title}`)
-      setActivePanel(null)
     } catch (err) {
       setMessage(err.response?.data?.detail || 'Could not add book')
+      setTimeout(() => setMessage(''), 10000)
     }
   }
 
@@ -130,8 +165,10 @@ function Register({ user, setUser }) {
         params: { user_id: user.id }
       })
       await fetchMyBooks()
+      setConfirmDeleteId(null)
     } catch (err) {
       setMessage(err.response?.data?.detail || 'Could not remove book')
+      setTimeout(() => setMessage(''), 10000)
     }
   }
 
@@ -192,25 +229,29 @@ function Register({ user, setUser }) {
                     placeholder="Username"
                     value={form.username}
                     onChange={(e) => setForm({ ...form, username: e.target.value })}
+                    onKeyDown={(e) => e.key === 'Enter' && handleRegister()}
+                  />
+
+                  <input
+                    type="password"
+                    className="w-full border border-charcoal/25 rounded px-3 py-2 text-sm focus:outline-none focus:border-teal"
+                    placeholder="Password"
+                    value={form.password}
+                    onChange={(e) => setForm({ ...form, password: e.target.value })}
+                    onKeyDown={(e) => e.key === 'Enter' && handleRegister()}
                   />
 
                   <input
                     className="w-full border border-charcoal/25 rounded px-3 py-2 text-sm focus:outline-none focus:border-teal"
-                    placeholder="Email"
-                    value={form.email}
-                    onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  />
-
-                  <input
-                    className="w-full border border-charcoal/25 rounded px-3 py-2 text-sm focus:outline-none focus:border-teal"
-                    placeholder="Telegram handle (optional)"
+                    placeholder="Telegram handle"
                     value={form.telegram_handle}
                     onChange={(e) => setForm({ ...form, telegram_handle: e.target.value })}
+                    onKeyDown={(e) => e.key === 'Enter' && handleRegister()}
                   />
 
                   <button
                     onClick={handleRegister}
-                    disabled={!form.username.trim() || !form.email.trim()}
+                    disabled={!form.username.trim() || !form.password.trim() || !form.telegram_handle.trim()}
                     className="w-full bg-burgundy text-cream font-medium text-sm py-2.5 rounded hover:bg-burgundy-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-burgundy"
                   >
                     Create account
@@ -220,9 +261,19 @@ function Register({ user, setUser }) {
                 <div className="bg-white border border-charcoal/20 rounded-lg p-6 space-y-3">
                   <input
                     className="w-full border border-charcoal/25 rounded px-3 py-2 text-sm focus:outline-none focus:border-teal"
-                    placeholder="Email"
-                    value={loginEmail}
-                    onChange={(e) => setLoginEmail(e.target.value)}
+                    placeholder="Username"
+                    value={loginUsername}
+                    onChange={(e) => setLoginUsername(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+                  />
+
+                  <input
+                    type="password"
+                    className="w-full border border-charcoal/25 rounded px-3 py-2 text-sm focus:outline-none focus:border-teal"
+                    placeholder="Password"
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
                   />
 
                   <button
@@ -347,12 +398,14 @@ function Register({ user, setUser }) {
                   placeholder="Book title"
                   value={manualBook.title}
                   onChange={(e) => setManualBook({ ...manualBook, title: e.target.value })}
+                  onKeyDown={(e) => e.key === 'Enter' && handleManualAdd()}
                 />
                 <input
                   className="flex-1 border border-charcoal/25 rounded px-3 py-2 text-sm focus:outline-none focus:border-teal"
                   placeholder="Author (optional)"
                   value={manualBook.author}
                   onChange={(e) => setManualBook({ ...manualBook, author: e.target.value })}
+                  onKeyDown={(e) => e.key === 'Enter' && handleManualAdd()}
                 />
                 <button
                   onClick={handleManualAdd}
@@ -360,6 +413,32 @@ function Register({ user, setUser }) {
                 >
                   Add book
                 </button>
+              </div>
+            </div>
+          )}
+
+          {/* Book removal confirmation */}
+          {confirmDeleteId && (
+            <div className="fixed inset-0 bg-charcoal/50 flex items-center justify-center z-50 px-4">
+              <div className="bg-cream rounded-lg w-full max-w-sm shadow-xl p-6">
+                <h2 className="font-display text-lg font-semibold text-burgundy mb-2">Remove this book?</h2>
+                <p className="text-charcoal/70 text-sm mb-6">
+                  This will remove it from your shelf. This can't be undone.
+                </p>
+                <div className="flex gap-3 justify-end">
+                  <button
+                    onClick={() => setConfirmDeleteId(null)}
+                    className="text-sm font-medium text-charcoal/60 hover:text-charcoal px-4 py-2"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => handleDeleteBook(confirmDeleteId)}
+                    className="bg-burgundy text-cream text-sm font-medium px-5 py-2 rounded hover:bg-burgundy-dark transition-colors"
+                  >
+                    Remove
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -402,13 +481,19 @@ function Register({ user, setUser }) {
 
                     <div className="flex items-center justify-between mt-2">
                       {book.genre && (
-                        <span className="text-[10px] bg-teal/10 text-teal-dark px-2 py-0.5 rounded-full font-medium truncate">
+                        <span
+                          className="text-[10px] px-2 py-0.5 rounded-full font-medium truncate"
+                          style={{
+                            background: (GENRE_COLORS[book.genre] || DEFAULT_COLOR)[0],
+                            color: (GENRE_COLORS[book.genre] || DEFAULT_COLOR)[1]
+                          }}
+                        >
                           {book.genre}
                         </span>
                       )}
                       {book.is_available && (
                         <button
-                          onClick={() => handleDeleteBook(book.id)}
+                          onClick={() => setConfirmDeleteId(book.id)}
                           className="text-charcoal/40 hover:text-burgundy text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity"
                         >
                           Remove
