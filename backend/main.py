@@ -8,11 +8,12 @@ from database import (
     get_user_books,
     create_swap_request,
     get_swap_requests_for_user,
+    get_user_by_username,
     update_swap_request_status,
     has_used_shelf_scan, 
     mark_shelf_scan_used,
     is_duplicate_book,
-    get_user_by_email
+    verify_user_login
 )
 from pipeline import run_pipeline
 from search import search_books_by_title
@@ -31,16 +32,26 @@ app.add_middleware( # Allows React frontend to talk to backend by trusting reque
 # The models that requests can have are below, if smth from frontend doesn't follow this shape, FastAPI rejects it.
 class CreateUserRequest(BaseModel):
     username: str
-    email: str
-    location: str = None
+    password: str
     telegram_handle: str = None
 
-    @field_validator("username", "email")
+    @field_validator("username", "password")
     @classmethod
     def not_blank(cls, v):
         if not v or not v.strip():
             raise ValueError("This field is required")
         return v.strip()
+    
+    @field_validator("password")
+    @classmethod
+    def min_length(cls, v):
+        if len(v) < 6:
+            raise ValueError("Password must be at least 6 characters")
+        return v
+    
+class LoginRequest(BaseModel):
+    username: str
+    password: str
 
 class SwapRequestCreate(BaseModel):
     requester_id: str
@@ -59,26 +70,24 @@ class ManualBookRequest(BaseModel):
 # User endpoint
 @app.post("/users")
 async def register_user(body: CreateUserRequest):
-    from database import get_user_by_email
-    
-    existing = get_user_by_email(body.email)
-    if existing:
+    existing_username = get_user_by_username(body.username)
+    if existing_username:
         raise HTTPException(
             status_code=400,
-            detail="An account with that email already exists. Try logging in instead."
+            detail="That username is already taken."
         )
     try:
-        user = create_user(body.username, body.email, body.location, body.telegram_handle)
+        user = create_user(body.username, body.password, body.telegram_handle)
         return user
     except Exception as e:
         raise HTTPException(status_code=400, detail="Registration failed. Please try again.")
 
 # User login endpoint
-@app.get("/users/login")
-async def login_user(email: str):
-    user = get_user_by_email(email)
+@app.post("/users/login")
+async def login_user(body: LoginRequest):
+    user = verify_user_login(body.username, body.password)
     if not user:
-        raise HTTPException(status_code=404, detail="No account found with that email")
+        raise HTTPException(status_code=401, detail="Invalid username or password")
     return user
 
 # Pipeline endpoint

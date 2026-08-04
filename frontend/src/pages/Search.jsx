@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 import SwapModal from './components/SwapModal'
 
-const API_URL = 'http://localhost:8000'
+const API_URL = import.meta.env.VITE_API_URL
 
 function Search({ user }) {
   const [query, setQuery] = useState('')
@@ -12,11 +12,18 @@ function Search({ user }) {
   const [swapTarget, setSwapTarget] = useState(null)
   const [swapSuccess, setSwapSuccess] = useState(false)
   const [sentRequests, setSentRequests] = useState(new Set())
+  const [message, setMessage] = useState('')
 
   const handleSearch = async () => {
     if (!user) {
-      alert('Please register first')
+      setMessage('Please register first')
+      setTimeout(() => setMessage(''), 4000)
       return
+    }
+    if (!query.trim()) {
+    setMessage('Enter a book title to search.')
+    setTimeout(() => setMessage(''), 3000)
+    return
     }
     setLoading(true)
     setSearched(true)
@@ -66,6 +73,10 @@ function Search({ user }) {
         <p className="text-sm text-burgundy bg-burgundy/10 px-4 py-2 rounded inline-block mb-6">
           Register first to start searching.
         </p>
+      )}
+
+      {message && (
+        <p className="mb-6 ml-2 text-sm text-burgundy bg-burgundy/10 px-4 py-2 rounded inline-block">{message}</p>
       )}
 
       <div className="flex items-center gap-3 mb-10">

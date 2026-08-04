@@ -6,7 +6,7 @@ load_dotenv()
 
 def search_books_by_title(query: str, current_user_id: str) -> list[dict]: # Search for users who own the queried book
     result = supabase.table("books")\
-        .select("id, title, author, genre, thumbnail, retail_price, user_id, users(username, location)")\
+        .select("id, title, author, genre, thumbnail, retail_price, user_id, users(username)")\
         .ilike("title", f"%{query}%")\
         .eq("is_available", True)\
         .neq("user_id", current_user_id)\
@@ -32,5 +32,5 @@ if __name__ == "__main__": # If this file is run manually, test code
             for book in results:
                 owner = book.get("users", {})
                 print(f"📖 {book['title']} by {book['author']}")
-                print(f"Owner: {owner.get('username')} ({owner.get('location')})")
+                print(f"Owner: {owner.get('username')}")
                 print(f"Genre: {book['genre']} | Price: ${book.get('retail_price', 'N/A')}\n")

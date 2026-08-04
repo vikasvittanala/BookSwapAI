@@ -1,6 +1,7 @@
 import os
 from supabase import create_client, Client
 from dotenv import load_dotenv
+import bcrypt
 
 load_dotenv()
 
@@ -39,20 +40,33 @@ def get_user_books(user_id: str) -> list[dict]:
     return result.data
 
 # Create new user in Supabase
-def create_user(username: str, email: str, location: str = None, telegram_handle: str = None) -> dict:
+def create_user(username: str, password: str, telegram_handle: str = None) -> dict:
+    hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
     data = {
         "id": str(__import__('uuid').uuid4()),
         "username": username,
-        "email": email,
-        "location": location,
+        "password": hashed, 
         "telegram_handle" : telegram_handle or "User did not provide a Telegram handle"
     }
     result = supabase.table("users").insert(data).execute()
-    return result.data[0]
+    user = result.data[0]
+    user.pop("password", None)  # never send hash back to frontend
+    return user
 
-# Look up an existing user by email
-def get_user_by_email(email: str) -> dict | None:
-    result = supabase.table("users").select("*").eq("email", email).execute()
+# Password verification
+def verify_user_login(username: str, password: str) -> dict | None:
+    result = supabase.table("users").select("*").ilike("username", username).execute()
+    if not result.data:
+        return None
+    user = result.data[0]
+    if bcrypt.checkpw(password.encode(), user["password"].encode()):
+        user.pop("password", None)
+        return user
+    return None
+
+# Look up an existing user by username
+def get_user_by_username(username: str) -> dict | None:
+    result = supabase.table("users").select("*").ilike("username", username).execute()
     return result.data[0] if result.data else None
 
 # Check if user already owns a book with this title and author
@@ -146,19 +160,24 @@ def get_swap_requests_for_user(user_id: str) -> dict:
     }
 
 def update_swap_request_status(request_id: str, status: str) -> dict:
-    # Accept or reject a swap request, and tag all involved books as 'unavailable' if accepted
+    if status == "accepted":
+        # Check all involved books are still available before accepting
+        books_result = supabase.table("swap_request_books")\
+            .select("book_id")\
+            .eq("swap_request_id", request_id)\
+            .execute()
+
+        for book in books_result.data:
+            book_check = supabase.table("books").select("is_available").eq("id", book["book_id"]).execute()
+            if not book_check.data or not book_check.data[0]["is_available"]:
+                raise ValueError("One or more books in this swap are no longer available")
+
     result = supabase.table("swap_requests")\
         .update({"status": status})\
         .eq("id", request_id)\
         .execute()
 
     if status == "accepted":
-        # Get all books involved in this request and then tag them as 'unavailable'
-        books_result = supabase.table("swap_request_books")\
-            .select("book_id")\
-            .eq("swap_request_id", request_id)\
-            .execute()
-        
         for book in books_result.data:
             supabase.table("books")\
                 .update({"is_available": False})\
