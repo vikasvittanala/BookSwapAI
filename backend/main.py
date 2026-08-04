@@ -23,7 +23,7 @@ app = FastAPI(title="BookSwapAI API") # Creates the website backend / server
 
 app.add_middleware( # Allows React frontend to talk to backend by trusting requests coming from 5173
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # Vite's default port
+    allow_origins=["http://localhost:5173", "https://book-swap-ai.vercel.app"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
