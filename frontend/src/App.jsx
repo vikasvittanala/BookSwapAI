@@ -32,6 +32,13 @@ function App() {
     else localStorage.removeItem('user')
   }, [user])
 
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+
+  const handleLogout = () => {
+    setUser(null)
+    setShowLogoutConfirm(false)
+  }
+
   return (
     <BrowserRouter>
       <nav className="border-b border-charcoal/15 bg-white">
@@ -48,13 +55,45 @@ function App() {
             <NavLink to="/search">Search</NavLink>
             <NavLink to="/swaps">Swaps</NavLink>
             {user && (
-              <span className="text-xs font-medium text-teal-dark bg-teal/10 px-3 py-1 rounded-full">
-                {user.username}
-              </span>
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-medium text-teal-dark bg-teal/10 px-3 py-1 rounded-full">
+                  {user.username}
+                </span>
+                <button
+                  onClick={() => setShowLogoutConfirm(true)}
+                  className="text-xs font-medium text-charcoal/40 hover:text-burgundy transition-colors"
+                >
+                  Logout
+                </button>
+              </div>
             )}
           </div>
         </div>
       </nav>
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 bg-charcoal/50 flex items-center justify-center z-50 px-4">
+          <div className="bg-cream rounded-lg w-full max-w-sm shadow-xl p-6">
+            <h2 className="font-display text-lg font-semibold text-burgundy mb-2">Log out?</h2>
+            <p className="text-charcoal/70 text-sm mb-6">
+              You'll need to log back in to access your shelf.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowLogoutConfirm(false)}
+                className="text-sm font-medium text-charcoal/60 hover:text-charcoal px-4 py-2"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleLogout}
+                className="bg-burgundy text-cream text-sm font-medium px-5 py-2 rounded hover:bg-burgundy-dark transition-colors"
+              >
+                Log out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <Routes>
         <Route path="/register" element={<Register user={user} setUser={setUser} />} />
         <Route path="/search" element={<Search user={user} />} />
