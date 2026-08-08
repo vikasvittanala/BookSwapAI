@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom'
 import Register from './pages/Register'
 import Search from './pages/Search'
 import Swaps from './pages/Swaps'
@@ -21,7 +21,9 @@ function NavLink({ to, children }) {
   )
 }
 
-function App() {
+function AppContent() {
+  const navigate = useNavigate()
+
   const [user, setUser] = useState(() => {
     const saved = localStorage.getItem('user')
     return saved ? JSON.parse(saved) : null
@@ -37,10 +39,11 @@ function App() {
   const handleLogout = () => {
     setUser(null)
     setShowLogoutConfirm(false)
+    navigate('/register')
   }
 
   return (
-    <BrowserRouter>
+    <>
       <nav className="border-b border-charcoal/15 bg-white">
         <div className="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link to="/register" className="flex items-center">
@@ -100,6 +103,14 @@ function App() {
         <Route path="/swaps" element={<Swaps user={user} />} />
         <Route path="/" element={<Register user={user} setUser={setUser} />} />
       </Routes>
+    </>
+  )
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <AppContent />
     </BrowserRouter>
   )
 }
