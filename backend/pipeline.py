@@ -1,6 +1,6 @@
 from shelf_scanner import extract_books_from_shelf
 from google_books_enrichment import enrich_with_google_books
-from database import create_user, save_books_for_user
+from database import save_books_for_user
 
 def run_pipeline(image_path: str, user_id: str) -> list[dict]: # Order: extract books from shelf, filter low confidence results, enrich via Google Books, save to Supabase
     print("Step 1: Scanning shelf image")
@@ -26,17 +26,3 @@ def run_pipeline(image_path: str, user_id: str) -> list[dict]: # Order: extract 
 
     print(f"Process complete. {len(saved)} books saved for user {user_id}")
     return saved
-
-if __name__ == "__main__": # If this file is run manually
-    import uuid
-    
-    user = create_user( # Dummy user
-        username="pipeline_test_user",
-        email=f"pipeline_{uuid.uuid4().hex[:6]}@test.com",
-    )
-    print(f"Test user created: {user['id']}")
-
-    results = run_pipeline("Example bookshelf image.jpg", user["id"]) # Run the pipeline on a test image
-    print(f"\nFinal verified books:")
-    for book in results:
-        print(f"  - {book['title']} by {book['author']} | {book['genre']} | ${book.get('retail_price', 'N/A')}")

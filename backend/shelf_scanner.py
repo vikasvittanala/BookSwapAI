@@ -41,10 +41,3 @@ def extract_books_from_shelf(image_path: str) -> list[dict]: # Function to call 
     )
     result = json.loads(response.choices[0].message.content)
     return result.get("books", [])
-
-if __name__ == "__main__": # Only runs this block if file is executed directly
-    image_path = "Example bookshelf image.jpeg" # Using a test image for now to ensure it works
-    books = extract_books_from_shelf(image_path)
-    print(f"Found {len(books)} books:\n")
-    for book in books:
-        print(f"  [{book['confidence'].upper()}] {book['title']} — {book.get('author', 'Unknown')}")
