@@ -59,21 +59,3 @@ def enrich_with_google_books(title: str, author: str) -> dict | None: # Function
             "retail_price": sale_info.get("retailPrice", {}).get("amount")
         }
     return None
-
-if __name__ == "__main__": # Test the function with a mix of valid and invalid books
-    test_books = [
-        {"title": "Atomic Habits", "author": "James Clear"},
-        {"title": "Thinking Fast and Slow", "author": "Daniel Kahneman"},
-        {"title": "The Psychology of Banana Peels", "author": "John Smith"},  # invalid
-    ]
-    
-    print("Testing Google Books validation + enrichment:\n")
-    for book in test_books:
-        result = enrich_with_google_books(book["title"], book["author"])
-        if result:
-            print(f"VERIFIED: {result['title']} by {result['author']}")
-            print(f"Genre: {result['genre']}")
-            print(f"Price: ${result['retail_price'] or 'N/A'}")
-            print(f"Rating: {result['avg_rating'] or 'N/A'}\n")
-        else:
-            print(f"REJECTED: '{book['title']}' — not found in Google Books\n")
