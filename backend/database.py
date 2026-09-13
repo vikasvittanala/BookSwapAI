@@ -5,6 +5,14 @@ import bcrypt
 
 load_dotenv()
 
+# PythonAnywhere free-tier website processes don't inherit the proxy env vars
+# that Bash consoles get automatically, so outbound requests get refused
+# unless we set these explicitly:
+os.environ.setdefault("http_proxy", "http://proxy.server:3128")
+os.environ.setdefault("https_proxy", "http://proxy.server:3128")
+os.environ.setdefault("HTTP_PROXY", "http://proxy.server:3128")
+os.environ.setdefault("HTTPS_PROXY", "http://proxy.server:3128")
+
 supabase: Client = create_client(
     os.getenv("SUPABASE_URL"),
     os.getenv("SUPABASE_KEY")
